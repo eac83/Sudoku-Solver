@@ -11,6 +11,7 @@ class Board:
         self.range = set(range(1, self.size+1))
         
     def complete(self):
+        self.possibilities = []
         [self.possibilities.append([{np.nan}]*self.size) for i in range(0, self.size)]*self.size
         for i in range(0, self.size):
             for j in range(0, self.size):
@@ -25,8 +26,7 @@ class Board:
                     possible = self.range - row.union(column.union(square))
                     #print(f'({i}, {j}): possibilities: {possible}')
                     if len(possible) == 0:
-                        print(f'Error! Cell ({i}, {j}) has no possible values!')
-                        break
+                        raise Exception(f'Error! Cell ({i}, {j}) has no possible values!')
                     elif len(possible) == 1:
                         self.board[i, j] = list(possible)[0]
                     else:
@@ -45,13 +45,16 @@ class Board:
                     for x, poss_x in enumerate(self.possibilities[i]):
                         if (poss_x != {np.nan} and x != j):
                             row = row.union(poss_x)
-                    for y, poss_y in enumerate(self.possibilities[:][j]):
+                   # for y, poss_y in enumerate(self.possibilities[:][j]):
+                    for y in range(0, self.size):
+                        poss_y = self.possibilities[y][j]
                         if (poss_y != {np.nan} and y != i):
                             column = column.union(poss_y)
                     for a in range(int(self.square_size*np.floor(i/self.square_size)), int(self.square_size*np.floor(i/self.square_size)+self.square_size)):
                         for b in range(int(self.square_size*np.floor(j/self.square_size)), int(self.square_size*np.floor(j/self.square_size)+self.square_size)):
-                            if self.possibilities[a][b] != {np.nan}:
+                            if self.possibilities[a][b] != {np.nan} and (a, b) != (i, j):
                                 square = square.union(self.possibilities[a][b])
+                 
                     remainder_row = self.possibilities[i][j] - row
                     remainder_column = self.possibilities[i][j] - column
                     remainder_square = self.possibilities[i][j] - square
@@ -62,6 +65,7 @@ class Board:
                         for a in range(int(self.square_size*np.floor(i/self.square_size)), int(self.square_size*np.floor(i/self.square_size)+self.square_size)):
                             for b in range(int(self.square_size*np.floor(j/self.square_size)), int(self.square_size*np.floor(j/self.square_size)+self.square_size)):
                                 self.possibilities[a][b] -= remainder_row
+                        self.possibilities[i][j] = {np.nan}
                     elif len(remainder_column) == 1:
                         self.board[i, j] = list(remainder_column)[0]
                         for x in range(0, self.size):
@@ -69,10 +73,12 @@ class Board:
                         for a in range(int(self.square_size*np.floor(i/self.square_size)), int(self.square_size*np.floor(i/self.square_size)+self.square_size)):
                             for b in range(int(self.square_size*np.floor(j/self.square_size)), int(self.square_size*np.floor(j/self.square_size)+self.square_size)):
                                 self.possibilities[a][b] -= remainder_column
+                        self.possibilities[i][j] = {np.nan}
                     elif len(remainder_square) == 1:
                         self.board[i, j] = list(remainder_square)[0]
                         for x in range(0, self.size):
                             self.possibilities[i][x] -= remainder_square
                         for y in range(0, self.size):
                             self.possibilities[y][j] -= remainder_square
+                        self.possibilities[i][j] = {np.nan}
         return self.board
